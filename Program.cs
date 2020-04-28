@@ -3,6 +3,7 @@ using Silk.NET.Input.Common;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Common;
+using Silk.NET.GLFW;
 using System;
 using System.Diagnostics;
 using SixLabors.ImageSharp;
@@ -12,14 +13,18 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Processing;
 using System.Drawing;
 using System.IO;
-using System;
 using System.Numerics;
+using Silk.NET.Core.Loader;
+using Silk.NET.Core.Platform;
+using Silk.NET.Windowing.Desktop;
 
 namespace _3Dtest
 {
-    class Program
+    unsafe class Program
     {
-        private static IWindow window;
+        private static IWindow window1;
+        private static Glfw glfw;
+        private static WindowHandle* window;
         private static GL Gl;
 
         private static uint Vbo;
@@ -83,38 +88,57 @@ namespace _3Dtest
 
         private static float Rot = 225;
 
-        private static void Main(string[] args)
+        private unsafe static void Main(string[] args)
         {
-            //Create a window.
-            var options = WindowOptions.Default;
-            options.Size = new Size(800, 600);
-            options.Title = "3Dtest";
 
-            window = Window.Create(options);
+            glfw = Glfw.GetApi();
+
+            Console.WriteLine(glfw.GetVersionString());
+
+            glfw.SetErrorCallback(GlfwError);
+
+            SilkManager.Register<GLSymbolLoader>(new GlfwLoader());
+
+            glfw.Init();
+            glfw.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+            glfw.WindowHint(WindowHintInt.ContextVersionMinor, 3);
+            glfw.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+
+            window = glfw.CreateWindow(800, 600, "3Dtest", null, null);
+
+            if (window == null)
+            {
+                Console.WriteLine("Window creation failed");
+                glfw.Terminate();
+                return;
+            }
 
 
-            //Assign events.
-            window.Load += OnLoad;
-            window.Update += OnUpdate;
-            window.Render += OnRender;
-            window.Resize += OnResize;
+            glfw.MakeContextCurrent(window);
+            glfw.SetWindowSizeCallback(window, OnResize);
 
-            //Run the window.
-            window.Run();
+
+             OnLoad();
+
+            while (!glfw.WindowShouldClose(window))
+            {
+                ProcessInput(window);
+
+                OnRender();
+            }
+
+            glfw.Terminate();
         }
 
-        private static void OnResize(Size obj)
+       
+
+        private unsafe static void OnResize(WindowHandle* window, int width, int height)
         {
-            Gl.Viewport(0, 0, (uint)obj.Width, (uint)obj.Height);
+           // Gl.Viewport(0, 0, (uint)width, (uint)height);
         }
 
         private static unsafe void OnLoad()
         {
-            //Set-up input context.
-            IInputContext input = window.CreateInput();
-            for (int i = 0; i < input.Keyboards.Count; i++)
-                input.Keyboards[i].KeyDown += KeyDown;
-            
             Gl = GL.GetApi();
             
 
@@ -153,43 +177,41 @@ namespace _3Dtest
             boxTexture.BindToUnit(0);
             faceTexture.BindToUnit(1);
 
+
+            Gl.Enable(EnableCap.DepthTest);
+            
         }
 
-        private unsafe static void OnRender(double obj)
+        private unsafe static void OnRender()
         {
-            Gl.Clear((uint)(ClearBufferMask.ColorBufferBit));
-            Gl.Clear((uint)(ClearBufferMask.DepthBufferBit));
-
-            Gl.Enable(GLEnum.DepthTest);
-            Gl.DepthFunc(DepthFunction.Less);
+            Gl.Clear((uint)(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
 
             shader.Use();
 
-            Rot += (float)(obj * 10f);
+            Rot = (float)(glfw.GetTime() * 10f);
             if (Rot > 360) Rot %= 360;
 
             shader.SetMatrix4x4("model", Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, ToRadians(Rot)));
             shader.SetMatrix4x4("view", Matrix4x4.CreateTranslation(new Vector3(0, 0, -3)));
-            shader.SetMatrix4x4("projection", Matrix4x4.CreatePerspectiveFieldOfView(ToRadians(45f), 800f / 600f, .1f, 100f));
+            shader.SetMatrix4x4("projection", Matrix4x4.CreatePerspectiveFieldOfView(ToRadians(45f), 800f / 600f, 1f, 100f));
 
             Gl.BindVertexArray(Vao);
             Gl.DrawArrays(PrimitiveType.Triangles, 0, 36);
+
+            glfw.SwapBuffers(window);
+            glfw.PollEvents();
+        }
+        private unsafe static void ProcessInput(WindowHandle* window)
+        {
+            if (glfw.GetKey(window, Keys.Escape) == (int)InputAction.Press)
+                glfw.SetWindowShouldClose(window, true);
         }
 
-        private static void OnUpdate(double obj)
+        private static void GlfwError(Silk.NET.GLFW.ErrorCode error, string msg)
         {
-            
+            Console.WriteLine($"Glfw encountered an error (code {error}): {msg}");
         }
-        
 
-        private static void KeyDown(IKeyboard arg1, Key arg2, int arg3)
-        {
-            //Check to close the window on escape.
-            if (arg2 == Key.Escape)
-            {
-                window.Close();
-            }
-        }
 
 
         private static float ToRadians(float deg)
