@@ -60,7 +60,7 @@ namespace _3Dtest
         public void SetBool(string uniform, bool b)
         {
             Use();
-            gl.Uniform1(gl.GetUniformLocation(ID, uniform), b?1:0);
+            gl.Uniform1(gl.GetUniformLocation(ID, uniform), b ? 1 : 0);
         }
 
         public void SetInt(string uniform, int i)
@@ -80,6 +80,9 @@ namespace _3Dtest
             Use();
             gl.Uniform3(gl.GetUniformLocation(ID, uniform), vec3);
         }
+
+        public void SetVec3(string uniform, float x, float y, float z)
+            => SetVec3(uniform, new Vector3(x, y, z));
 
         public void SetVec4(string uniform, Vector4 vec4)
         {

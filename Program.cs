@@ -22,71 +22,84 @@ namespace _3Dtest
 {
     unsafe class Program
     {
-        private static IWindow window1;
         private static Glfw glfw;
         private static WindowHandle* window;
         private static GL Gl;
 
         private static uint Vbo;
         private static uint Vao;
-        private static uint Ebo;
+        private static uint LightVao;
 
-        private static Texture boxTexture, faceTexture;
+        private static Texture boxTexture, boxSpecular;
 
         private static Shader shader;
+        private static Shader lightShader;
 
-        private static float[] verts = {
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-};
-    
-
-        private static uint[] indices = {  // note that we start from 0!
-            0, 1, 3,
-            1, 2, 3
-            
+        private static Vector3[] lightPositions =
+        {
+            new Vector3( 0.7f,  0.2f,  2.0f),
+            new Vector3( 2.3f, -3.3f, -4.0f),
+            new Vector3(-4.0f,  2.0f, -12.0f),
+            new Vector3( 0.0f,  0.0f, -3.0f)
         };
 
-        private static float Rot = 225;
+        private static DirectionalLight Sun;
+        private static SpotLight FlashLight;
+        private static PointLight[] PointLights;
+
+        private static Camera camera;
+
+        private static float[] verts = {
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+};
+
+        private static float Fov = 90;
+
+        private static float lastFrame = 0.0f;
+        private static float deltaTime = 0.0f;
+
+        private static float cursorLastX = 400f, cursorLastY = 300;
+        private static bool firstMouse = true;
 
         private unsafe static void Main(string[] args)
         {
@@ -116,12 +129,20 @@ namespace _3Dtest
 
             glfw.MakeContextCurrent(window);
             glfw.SetWindowSizeCallback(window, OnResize);
-
+            glfw.SetCursorPosCallback(window, MouseInput);
+            glfw.SetScrollCallback(window, ScrollInput);
+            glfw.SetInputMode(window, CursorStateAttribute.Cursor, CursorModeValue.CursorDisabled);
 
              OnLoad();
 
+            float currentFrame;
+
             while (!glfw.WindowShouldClose(window))
             {
+                currentFrame = (float)glfw.GetTime();
+                deltaTime = currentFrame - lastFrame;
+                lastFrame = currentFrame;
+
                 ProcessInput(window);
 
                 OnRender();
@@ -134,13 +155,14 @@ namespace _3Dtest
 
         private unsafe static void OnResize(WindowHandle* window, int width, int height)
         {
-           // Gl.Viewport(0, 0, (uint)width, (uint)height);
+            Gl.Viewport(0, 0, (uint)width, (uint)height);
         }
 
         private static unsafe void OnLoad()
         {
             Gl = GL.GetApi();
-            
+
+            camera = new Camera();
 
             Vao = Gl.GenVertexArray();
             Gl.BindVertexArray(Vao);
@@ -151,35 +173,44 @@ namespace _3Dtest
             fixed (void* i = &verts[0])
                 Gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(sizeof(float) * verts.Length), i, BufferUsageARB.StaticDraw);
 
-            /*
-            Ebo = Gl.GenBuffer();
-            Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, Ebo);
-
-            fixed (void* i = &indices[0])
-                Gl.BufferData(BufferTargetARB.ElementArrayBuffer, (uint)(sizeof(uint) * indices.Length), i, BufferUsageARB.StaticDraw);
-                */
-
             shader = new Shader(Gl, "shader.vert", "shader.frag");
 
-            Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), (void*)0);
-            Gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+            Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), (void*)0);
+            Gl.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+            Gl.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), (void*)(6 * sizeof(float)));
             Gl.EnableVertexAttribArray(0);
             Gl.EnableVertexAttribArray(1);
+            Gl.EnableVertexAttribArray(2);
 
-            boxTexture = new Texture(Gl, "res/container.jpg");
-            faceTexture = new Texture(Gl, "res/container.jpg");
+            boxTexture = new Texture(Gl, "res/container2.png");
+            boxSpecular = new Texture(Gl, "res/container2_specular.png");
 
             shader.Use();
 
-            shader.SetInt("texture1", 0);
-            shader.SetInt("texture2", 1);
-
+            shader.SetInt("material.diffuse", 0);
             boxTexture.BindToUnit(0);
-            faceTexture.BindToUnit(1);
 
+            shader.SetInt("material.specular", 1);
+            boxSpecular.BindToUnit(1);
+
+            shader.SetFloat("material.shininess", 32.0f);
+
+            LightVao = Gl.GenVertexArray();
+            Gl.BindVertexArray(LightVao);
+            Gl.BindBuffer(BufferTargetARB.ArrayBuffer, Vbo);
+            Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), (void*)0);
+            Gl.EnableVertexAttribArray(0);
 
             Gl.Enable(EnableCap.DepthTest);
-            
+
+            lightShader = new Shader(Gl, "shader.vert", "lightshader.frag");
+
+            Sun = new DirectionalLight(new Vector3(-0.2f, -1.0f, -0.3f), new Vector3(0.976f, 0.717f, 0.423f), new Vector3(0.976f, 0.717f, 0.423f), new Vector3(0.976f, 0.717f, 0.423f));
+            FlashLight = new SpotLight(camera.Position, (float)Math.Cos(Util.ToRadians(1.5f)), (float)Math.Cos(Util.ToRadians(20f)));
+
+            PointLights = new PointLight[lightPositions.Length];
+            for (int i = 0; i < lightPositions.Length; i++)
+                PointLights[i] = new PointLight(lightPositions[i]);
         }
 
         private unsafe static void OnRender()
@@ -188,23 +219,93 @@ namespace _3Dtest
 
             shader.Use();
 
-            Rot = (float)(glfw.GetTime() * 10f);
-            if (Rot > 360) Rot %= 360;
+            shader.SetVec3("viewPos", camera.Position);
+            shader.SetMatrix4x4("view", camera.LookAt());
+            shader.SetMatrix4x4("projection", Matrix4x4.CreatePerspectiveFieldOfView(Util.ToRadians(Fov), 800f / 600f, .1f, 100f));
+            shader.SetMatrix4x4("model", Matrix4x4.Identity);
 
-            shader.SetMatrix4x4("model", Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, ToRadians(Rot)));
-            shader.SetMatrix4x4("view", Matrix4x4.CreateTranslation(new Vector3(0, 0, -3)));
-            shader.SetMatrix4x4("projection", Matrix4x4.CreatePerspectiveFieldOfView(ToRadians(45f), 800f / 600f, 1f, 100f));
+            FlashLight.Position = camera.Position;
+            FlashLight.Direction = camera.GetDirection();
+
+            Sun.SetValues(shader, "dirLight");
+            FlashLight.SetValues(shader, "spotLight");
+            for(int i = 0; i < PointLights.Length; i++)
+                PointLights[i].SetValues(shader, $"pointLights[{i}]");
 
             Gl.BindVertexArray(Vao);
             Gl.DrawArrays(PrimitiveType.Triangles, 0, 36);
+
+            lightShader.Use();
+
+            lightShader.SetMatrix4x4("view", camera.LookAt());
+            lightShader.SetMatrix4x4("projection", Matrix4x4.CreatePerspectiveFieldOfView(Util.ToRadians(Fov), 800f / 600f, .1f, 100f));
+
+            Matrix4x4 mdl = Matrix4x4.Identity;
+            mdl *= Matrix4x4.CreateScale(.3f);
+
+            for(int i = 0; i < lightPositions.Length; i++)
+            {
+                lightShader.SetMatrix4x4("model", mdl * Matrix4x4.CreateTranslation(lightPositions[i]));
+
+                Gl.BindVertexArray(LightVao);
+                Gl.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            }
 
             glfw.SwapBuffers(window);
             glfw.PollEvents();
         }
         private unsafe static void ProcessInput(WindowHandle* window)
         {
+            var camSpeed = 2.5f * deltaTime;
+
             if (glfw.GetKey(window, Keys.Escape) == (int)InputAction.Press)
                 glfw.SetWindowShouldClose(window, true);
+            if (glfw.GetKey(window, Keys.W) == (int)InputAction.Press)
+                camera.Position += camera.GetDirection() * camSpeed;
+            if (glfw.GetKey(window, Keys.S) == (int)InputAction.Press)
+                camera.Position -= camera.GetDirection() * camSpeed;
+            if (glfw.GetKey(window, Keys.A) == (int)InputAction.Press)
+                camera.Position -= Vector3.Normalize(Vector3.Cross(camera.GetDirection(), camera.Up)) * camSpeed;
+            if (glfw.GetKey(window, Keys.D) == (int)InputAction.Press)
+                camera.Position += Vector3.Normalize(Vector3.Cross(camera.GetDirection(), camera.Up)) * camSpeed;
+
+        }
+
+        private unsafe static void ScrollInput(WindowHandle* window, double xScroll, double yScroll)
+        {
+            Fov += (float)yScroll;
+            if (Fov < 1)
+                Fov = 1;
+            if (Fov > 120)
+                Fov = 120;
+        }
+
+        private unsafe static void MouseInput(WindowHandle* window, double xpos, double ypos)
+        {
+            if (firstMouse!)
+            {
+                firstMouse = false;
+                cursorLastX = (float)xpos;
+                cursorLastY = (float)ypos;
+                return;
+            }
+
+            float xOffset = (float)(xpos - cursorLastX);
+            float yOffset = (float)(cursorLastY - ypos);
+            cursorLastX = (float)xpos;
+            cursorLastY = (float)ypos;
+
+            float sensitivity = 0.2f;
+            xOffset *= sensitivity;
+            yOffset *= sensitivity;
+
+            camera.Yaw += xOffset;
+            camera.Pitch += yOffset;
+            
+            if (camera.Pitch > 89f)
+                camera.Pitch = 89f;
+            if (camera.Pitch < -89f)
+                camera.Pitch = -89f;
         }
 
         private static void GlfwError(Silk.NET.GLFW.ErrorCode error, string msg)
@@ -213,10 +314,5 @@ namespace _3Dtest
         }
 
 
-
-        private static float ToRadians(float deg)
-        {
-            return (float)((deg / 180) * Math.PI);
-        }
     }
 }
