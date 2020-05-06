@@ -182,8 +182,8 @@ namespace _3Dtest
             Gl.EnableVertexAttribArray(1);
             Gl.EnableVertexAttribArray(2);
 
-            boxTexture = new Texture(Gl, "res/container2.png");
-            boxSpecular = new Texture(Gl, "res/container2_specular.png");
+            boxTexture = new Texture(Gl, "res/container2.png", TextureType.Diffuse);
+            boxSpecular = new Texture(Gl, "res/container2_specular.png", TextureType.Specular);
 
             shader.Use();
 

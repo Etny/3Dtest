@@ -13,12 +13,16 @@ namespace _3Dtest
     class Texture
     {
         public uint ID { get; private set; }
+        public string path;
+        public TextureType TextureType;
 
         private GL gl;
 
-        public Texture(GL gl, string imgPath)
+        public Texture(GL gl, string imgPath, TextureType type)
         {
             this.gl = gl;
+            this.TextureType = type;
+            this.path = imgPath;
 
             ID = gl.GenTexture();
             gl.BindTexture(TextureTarget.Texture2D, ID);
@@ -29,6 +33,11 @@ namespace _3Dtest
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
 
             LoadTexture(imgPath);
+        }
+
+        public Texture(GL gl, string imgPath, TextureType type, int unit) : this(gl, imgPath, type)
+        {
+            BindToUnit(unit);
         }
 
         private unsafe void LoadTexture(string path)
@@ -55,5 +64,12 @@ namespace _3Dtest
             gl.BindTexture(TextureTarget.Texture2D, ID);
         }
 
+    }
+
+    public enum TextureType
+    {
+        Diffuse, Specular
+
+        
     }
 }

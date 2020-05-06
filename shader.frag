@@ -1,8 +1,15 @@
 ﻿#version 330 core
 struct Material
 {
-	sampler2D diffuse;
-	sampler2D specular;
+	sampler2D texture_diffuse1;
+	sampler2D texture_diffuse2;
+	sampler2D texture_diffuse3;
+	sampler2D texture_diffuse4;
+	sampler2D texture_specular1;
+	sampler2D texture_specular2;
+	sampler2D texture_specular3;
+	sampler2D texture_specular4;
+
 	float shininess;
 };
 
@@ -86,11 +93,11 @@ vec3 CalcLight(vec3 lightDir, LightColor color, vec3 normal, vec3 viewDir, float
 	float diff = max(dot(normal, lightDir), 0.0);
 	float spec = pow(max(dot(viewDir, reflect(-lightDir, normal)), 0.0), material.shininess);
 
-	vec3 texel = vec3(texture(material.diffuse, TexCoords));
+	vec3 texel = vec3(texture(material.texture_diffuse1, TexCoords));
 
 	vec3 ambient = color.ambient * attenuation * texel;
 	vec3 diffuse = color.diffuse * intensity * attenuation * (diff * texel);
-	vec3 specular = color.specular * spec * vec3(texture(material.specular, TexCoords)) * intensity * attenuation;
+	vec3 specular = color.specular * spec * vec3(texture(material.texture_specular1, TexCoords)) * intensity * attenuation;
 	return vec3(ambient + diffuse + specular);
 }
 
