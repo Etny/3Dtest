@@ -22,7 +22,7 @@ namespace _3Dtest
             id = gl.CreateBuffer();
             Bind();
 
-            fixed (void* i = data)
+            fixed (void* i = &data.ToArray()[0])
                 gl.BufferData(bufferType, (uint)data.Length, i, BufferUsageARB.StaticDraw);
         }
 

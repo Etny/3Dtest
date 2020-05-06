@@ -9,36 +9,48 @@ namespace _3Dtest
 {
     class Mesh
     {
-        public Vertex[] Vertecis;
+        public Vertex[] Vertices;
         public uint[] Indices;
         public Texture[] Textures;
 
         private GL gl;
 
-        private GLBuffer<Vertex> VBO;
-        private GLBuffer<uint> EBO;
-        private VertexArrayObject<Vertex, uint> VAO;
+        private uint VAO, VBO, EBO;
 
-        public Mesh(GL gl, Vertex[] vertecis, uint[] indices, Texture[] textures)
+        public Mesh(GL gl, Vertex[] vertices, uint[] indices, Texture[] textures)
         {
             this.gl = gl;
 
-            this.Vertecis = vertecis;
+            this.Vertices = vertices;
             this.Indices = indices;
             this.Textures = textures;
 
             setupMesh();
         }
 
-        private void setupMesh()
+        private unsafe void setupMesh()
         {
-            VBO = new GLBuffer<Vertex>(gl, Vertecis.AsSpan(), BufferTargetARB.ArrayBuffer);
-            EBO = new GLBuffer<uint>(gl, Indices.AsSpan(), BufferTargetARB.ArrayBuffer);
-            VAO = new VertexArrayObject<Vertex, uint>(gl, VBO, EBO);
+            VBO = gl.GenBuffer();
+            EBO = gl.GenBuffer();
+            VAO = gl.GenVertexArray();
 
-            VAO.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, "Position");
-            VAO.VertexAttributePointer(1, 3, VertexAttribPointerType.Float, "Normal");
-            VAO.VertexAttributePointer(2, 2, VertexAttribPointerType.Float, "TexCoords");
+            gl.BindVertexArray(VAO);
+
+            gl.BindBuffer(BufferTargetARB.ArrayBuffer, VBO);
+            fixed(void* i = &Vertices[0])
+                gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(Vertices.Length * sizeof(Vertex)), i,  BufferUsageARB.StaticDraw);
+
+            gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, EBO);
+            fixed (void* i = &Indices[0])
+                gl.BufferData(BufferTargetARB.ElementArrayBuffer, (uint)(Indices.Length * sizeof(uint)), i, BufferUsageARB.StaticDraw);
+
+            gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)0);
+            gl.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)(3 * sizeof(float)));
+            gl.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)(6 * sizeof(float)));
+            gl.EnableVertexAttribArray(0);
+            gl.EnableVertexAttribArray(1);
+            gl.EnableVertexAttribArray(2);
+
         }
 
 
@@ -48,7 +60,7 @@ namespace _3Dtest
             int specularNumber = 1;
 
             for(int i = 0; i < Textures.Length; i++)
-            {   
+            {
                 string textureName = 
                     Textures[i].TextureType == TextureType.Diffuse ? 
                         "texture_diffuse" + diffuseNumber++ 
@@ -57,11 +69,11 @@ namespace _3Dtest
 
                 shader.SetInt($"material.{textureName}", i);
 
-                Textures[i].BindToUnit((int)TextureUnit.Texture0 + i);
+                Textures[i].BindToUnit(i);
             }
             gl.ActiveTexture(TextureUnit.Texture0);
 
-            VAO.Bind();
+            gl.BindVertexArray(VAO);
             gl.DrawElements(PrimitiveType.Triangles, (uint)Indices.Length, DrawElementsType.UnsignedInt, (void*)0);
         }
     }

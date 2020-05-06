@@ -33,7 +33,7 @@ namespace _3Dtest
 
         public void VertexAttributePointer(uint index, int count, VertexAttribPointerType type, uint vertexSize, int offset)
         {
-            gl.VertexAttribPointer(index, count, type, false, (uint)(vertexSize * sizeof(VertexType)), (void*)(offset * sizeof(VertexType)));
+            gl.VertexAttribPointer(index, count, type, false, (uint)(vertexSize * sizeof(float)), (void*)(offset));
             gl.EnableVertexAttribArray(index);
         }
 

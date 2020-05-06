@@ -72,6 +72,8 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 
 void main()
 {
+	
+
 	vec3 normal = normalize(Normal);
 	vec3 viewDir = normalize(viewPos - FragPos);
 
@@ -85,7 +87,6 @@ void main()
 	Result += CalcSpotLight(spotLight, normal, viewDir);
 
 	FragColor = vec4(Result, 1.0);
-
 }
 
 vec3 CalcLight(vec3 lightDir, LightColor color, vec3 normal, vec3 viewDir, float attenuation, float intensity)

@@ -9,6 +9,14 @@
 
   <ItemGroup>
     <None Remove="lightshader.frag" />
+    <None Remove="res\backpack\ao.jpg" />
+    <None Remove="res\backpack\backpack.mtl" />
+    <None Remove="res\backpack\backpack.obj" />
+    <None Remove="res\backpack\diffuse.jpg" />
+    <None Remove="res\backpack\normal.png" />
+    <None Remove="res\backpack\roughness.jpg" />
+    <None Remove="res\backpack\source_attribution.txt" />
+    <None Remove="res\backpack\specular.jpg" />
     <None Remove="res\container.jpg" />
     <None Remove="res\container2.png" />
     <None Remove="res\container2_specular.png" />
@@ -20,6 +28,30 @@
 
   <ItemGroup>
     <Content Include="lightshader.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\ao.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\backpack.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\backpack.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\diffuse.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\normal.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\roughness.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\source_attribution.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\backpack\specular.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="res\container.jpg">

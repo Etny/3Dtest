@@ -27,8 +27,9 @@ namespace _3Dtest
         private static GL Gl;
 
         private static uint Vbo;
-        private static uint Vao;
         private static uint LightVao;
+
+        private static Model backpack;
 
         private static Texture boxTexture, boxSpecular;
 
@@ -164,8 +165,8 @@ namespace _3Dtest
 
             camera = new Camera();
 
-            Vao = Gl.GenVertexArray();
-            Gl.BindVertexArray(Vao);
+            backpack = new Model(Gl, "res/backpack/backpack.obj");
+            //backpack = new Model(Gl, verts);
 
             Vbo = Gl.GenBuffer();
             Gl.BindBuffer(BufferTargetARB.ArrayBuffer, Vbo);
@@ -174,24 +175,8 @@ namespace _3Dtest
                 Gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(sizeof(float) * verts.Length), i, BufferUsageARB.StaticDraw);
 
             shader = new Shader(Gl, "shader.vert", "shader.frag");
-
-            Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), (void*)0);
-            Gl.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-            Gl.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-            Gl.EnableVertexAttribArray(0);
-            Gl.EnableVertexAttribArray(1);
-            Gl.EnableVertexAttribArray(2);
-
-            boxTexture = new Texture(Gl, "res/container2.png", TextureType.Diffuse);
-            boxSpecular = new Texture(Gl, "res/container2_specular.png", TextureType.Specular);
-
+          
             shader.Use();
-
-            shader.SetInt("material.diffuse", 0);
-            boxTexture.BindToUnit(0);
-
-            shader.SetInt("material.specular", 1);
-            boxSpecular.BindToUnit(1);
 
             shader.SetFloat("material.shininess", 32.0f);
 
@@ -232,9 +217,9 @@ namespace _3Dtest
             for(int i = 0; i < PointLights.Length; i++)
                 PointLights[i].SetValues(shader, $"pointLights[{i}]");
 
-            Gl.BindVertexArray(Vao);
-            Gl.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            backpack.Draw(shader);
 
+            /*
             lightShader.Use();
 
             lightShader.SetMatrix4x4("view", camera.LookAt());
@@ -249,7 +234,7 @@ namespace _3Dtest
 
                 Gl.BindVertexArray(LightVao);
                 Gl.DrawArrays(PrimitiveType.Triangles, 0, 36);
-            }
+            }*/
 
             glfw.SwapBuffers(window);
             glfw.PollEvents();

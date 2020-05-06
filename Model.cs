@@ -17,6 +17,32 @@ namespace _3Dtest
 
         private string directory;
 
+        public Model(GL gl, float[] v)
+        {
+            this.gl = gl;
+
+            List<Vertex> vs = new List<Vertex>();
+
+            for(int i = 0; i < v.Length; i += 8)
+            {
+                Vertex vr = new Vertex();
+                vr.Position = new Vector3(v[i], v[i + 1], v[i + 2]);
+                vr.Normal = new Vector3(v[i + 3], v[i + 4], v[i + 5]);
+                vr.TexCoords = new Vector2(v[i + 6], v[i + 7]);
+                vs.Add(vr);
+            }
+
+            List<uint> eb = new List<uint>();
+
+            for(int i = 0; i < vs.Count-2; i++)
+            {
+                eb.Add((uint)i);
+            }
+
+            meshes = new List<Mesh>();
+            meshes.Add(new Mesh(gl, vs.ToArray(), eb.ToArray(), new Texture[0]));
+        }
+
         public Model(GL gl, string filePath)
         {
             this.gl = gl;
@@ -28,7 +54,7 @@ namespace _3Dtest
         {
             var assimp =  new ai.AssimpContext();
 
-            ai.Scene scene = assimp.ImportFile(path, ai.PostProcessSteps.Triangulate | ai.PostProcessSteps.FlipUVs);
+            ai.Scene scene = assimp.ImportFile(path, ai.PostProcessSteps.Triangulate | ai.PostProcessSteps.FlipUVs | ai.PostProcessSteps.CalculateTangentSpace);
 
             if(scene == null || scene.RootNode == null || scene.SceneFlags.HasFlag(ai.SceneFlags.Incomplete))
             {
@@ -36,7 +62,7 @@ namespace _3Dtest
                 return;
             }
 
-            directory = path.Substring(0, path.LastIndexOf("/"));
+            directory = path.Substring(0, path.LastIndexOf("/")+1);
             loadedTextures = new List<Texture>();
             meshes = new List<Mesh>();
 
@@ -57,8 +83,10 @@ namespace _3Dtest
 
         private Mesh proccessMesh(ai.Mesh mesh, ai.Scene scene)
         {
-            Vertex[] vertices = new Vertex[mesh.VertexCount];
-            uint[] indices = new uint[mesh.FaceCount * 3];
+            //Vertex[] vertices = new Vertex[mesh.VertexCount];
+            //uint[] indices = new uint[mesh.FaceCount * 3];
+            List<Vertex> vertices = new List<Vertex>();
+            List<uint> indices = new List<uint>();
             Texture[] textures;
 
             for (int i = 0; i < mesh.VertexCount; i++)
@@ -79,12 +107,12 @@ namespace _3Dtest
                 else
                     v.TexCoords = new Vector2(0, 0);
 
-                vertices[i] = v;
+                vertices.Add(v);
             }
             
             for(int i = 0; i < mesh.FaceCount; i++)
                 for (int j = 0; j < mesh.Faces[i].IndexCount; j++)
-                    indices[i + j] = (uint)mesh.Faces[i].Indices[j];
+                    indices.Add((uint)mesh.Faces[i].Indices[j]);
 
             if (mesh.MaterialIndex >= 0)
             {
@@ -103,7 +131,7 @@ namespace _3Dtest
             else
                 textures = new Texture[0];
 
-            return null;
+            return new Mesh(gl, vertices.ToArray(), indices.ToArray(), textures);
         }
 
         private Texture[] loadMaterialTextures(ai.Material material, ai.TextureType type, TextureType textureType)
@@ -116,8 +144,7 @@ namespace _3Dtest
                 material.GetMaterialTexture(type, i, out slot);
 
                 string path = directory + slot.FilePath;
-                Console.WriteLine($"Texture file path: {path}");
-
+               
                 Texture texture;
 
                 Texture loaded = loadedTextures.Find(x => x.path == path);
@@ -128,6 +155,7 @@ namespace _3Dtest
                 {
                     texture = new Texture(gl, path, textureType);
                     loadedTextures.Add(texture);
+                    Console.WriteLine($"Texture file path: {path}");
                 }
 
                 textures[i] = texture;
@@ -138,6 +166,9 @@ namespace _3Dtest
 
         public void Draw(Shader shader)
         {
+           // meshes[0].Draw(shader);
+           // return;
+
             foreach (Mesh mesh in meshes)
                 mesh.Draw(shader);
         }
