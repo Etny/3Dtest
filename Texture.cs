@@ -12,6 +12,21 @@ namespace _3Dtest
 {
     class Texture
     {
+        private static readonly Dictionary<TextureType, InternalFormat> encodings = new Dictionary<TextureType, InternalFormat>()
+        {
+            {TextureType.Diffuse, InternalFormat.Srgb},
+            {TextureType.Specular, InternalFormat.Rgba},
+            {TextureType.Normal, InternalFormat.Rgba}
+        };
+
+        public static readonly Dictionary<TextureType, string> ShaderName = new Dictionary<TextureType, string>()
+        {
+            {TextureType.Diffuse, "texture_diffuse"},
+            {TextureType.Specular, "texture_specular"},
+            {TextureType.Normal, "texture_normal"}
+        };
+
+
         public uint ID { get; private set; }
         public string path;
         public TextureType TextureType;
@@ -39,14 +54,18 @@ namespace _3Dtest
         {
             BindToUnit(unit);
         }
-
+        
         private unsafe void LoadTexture(string path)
         {
             Image<Rgba32> img = (Image<Rgba32>)Image.Load(path);
             img.Mutate(x => x.Flip(FlipMode.Vertical));
 
+            InternalFormat format;
+            encodings.TryGetValue(TextureType, out format);
+            //format = InternalFormat.Rgba;
+
             fixed (void* i = &MemoryMarshal.GetReference(img.GetPixelSpan())) 
-                gl.TexImage2D(TextureTarget.Texture2D, 0, (int)InternalFormat.Rgba, (uint)img.Width, (uint)img.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, i);
+                gl.TexImage2D(TextureTarget.Texture2D, 0, (int)format, (uint)img.Width, (uint)img.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, i);
 
             img.Dispose();
 
@@ -68,8 +87,6 @@ namespace _3Dtest
 
     public enum TextureType
     {
-        Diffuse, Specular
-
-        
+        Diffuse, Specular, Normal
     }
 }

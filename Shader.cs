@@ -19,8 +19,8 @@ namespace _3Dtest
 
             uint vert = 0, frag = 0;
 
-            LoadShader(ref vert, GLEnum.VertexShader, vertexPath);
-            LoadShader(ref frag, GLEnum.FragmentShader, fragmentPath);
+            LoadShader(ref vert, ShaderType.VertexShader, vertexPath);
+            LoadShader(ref frag, ShaderType.FragmentShader, fragmentPath);
 
             ID = gl.CreateProgram();
             gl.AttachShader(ID, vert);
@@ -35,7 +35,32 @@ namespace _3Dtest
             gl.DeleteShader(frag);
         }
 
-        private void LoadShader(ref uint shader, GLEnum type, string path)
+        public Shader(GL gl, string vertexPath, string geometryPath, string fragmentPath)
+        {
+            this.gl = gl;
+
+            uint vert = 0, geom = 0, frag = 0;
+
+            LoadShader(ref vert, ShaderType.VertexShader, vertexPath);
+            LoadShader(ref geom, ShaderType.GeometryShader, geometryPath);
+            LoadShader(ref frag, ShaderType.FragmentShader, fragmentPath);
+
+            ID = gl.CreateProgram();
+            gl.AttachShader(ID, vert);
+            gl.AttachShader(ID, geom);
+            gl.AttachShader(ID, frag);
+            gl.LinkProgram(ID);
+
+            string log = gl.GetProgramInfoLog(ID);
+            if (!string.IsNullOrWhiteSpace(log))
+                Console.WriteLine($"Shader program link error: {log}");
+
+            gl.DeleteShader(vert);
+            gl.DeleteShader(geom);
+            gl.DeleteShader(frag);
+        }
+
+        private void LoadShader(ref uint shader, ShaderType type, string path)
         {
             shader = gl.CreateShader(type);
             gl.ShaderSource(shader, File.ReadAllText(path));
@@ -91,6 +116,12 @@ namespace _3Dtest
         }
 
         public unsafe void SetMatrix4x4(string uniform, Matrix4x4 mat4)
+        {
+            Use();
+            gl.UniformMatrix4(gl.GetUniformLocation(ID, uniform), 1, false, (float*)&mat4);
+        }
+
+        public unsafe void SetMatrix4x4(string uniform, GlmSharp.mat4 mat4)
         {
             Use();
             gl.UniformMatrix4(gl.GetUniformLocation(ID, uniform), 1, false, (float*)&mat4);

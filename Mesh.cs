@@ -47,9 +47,13 @@ namespace _3Dtest
             gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)0);
             gl.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)(3 * sizeof(float)));
             gl.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)(6 * sizeof(float)));
+            gl.VertexAttribPointer(3, 3, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)(8 * sizeof(float)));
+            gl.VertexAttribPointer(4, 3, VertexAttribPointerType.Float, false, (uint)sizeof(Vertex), (void*)(11 * sizeof(float)));
             gl.EnableVertexAttribArray(0);
             gl.EnableVertexAttribArray(1);
             gl.EnableVertexAttribArray(2);
+            gl.EnableVertexAttribArray(3);
+            gl.EnableVertexAttribArray(4);
 
         }
 
@@ -58,14 +62,24 @@ namespace _3Dtest
         {
             int diffuseNumber = 1;
             int specularNumber = 1;
+            int normalNumber = 1;
 
             for(int i = 0; i < Textures.Length; i++)
             {
-                string textureName = 
-                    Textures[i].TextureType == TextureType.Diffuse ? 
-                        "texture_diffuse" + diffuseNumber++ 
-                    : 
-                        "texture_sepcular" + specularNumber++;
+                string textureName = "unknown";
+
+                switch (Textures[i].TextureType)
+                {
+                    case TextureType.Diffuse:
+                        textureName = "texture_diffuse" + diffuseNumber++;
+                         break;
+                    case TextureType.Specular:
+                        textureName = "texture_specular" + specularNumber++;
+                        break;
+                    case TextureType.Normal:
+                        textureName = "texture_normal" + normalNumber++;
+                        break;
+                }
 
                 shader.SetInt($"material.{textureName}", i);
 
@@ -83,5 +97,7 @@ namespace _3Dtest
         public Vector3 Position;
         public Vector3 Normal;
         public Vector2 TexCoords;
+        public Vector3 Tangent;
+        public Vector3 Bitangent;
     }
 }

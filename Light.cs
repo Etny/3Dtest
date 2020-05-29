@@ -20,7 +20,8 @@ namespace _3Dtest
             Specular = specular;
         }
 
-        public virtual void SetValues(Shader shader, string name)
+        public abstract void SetValues(Shader shader, int index);
+        protected virtual void SetColorValues(Shader shader, string name)
         {
             shader.SetVec3(name + ".color.ambient", Ambient);
             shader.SetVec3(name + ".color.diffuse", Diffuse);
@@ -42,9 +43,11 @@ namespace _3Dtest
             Direction = direction;
         }
 
-        public override void SetValues(Shader shader, string name)
+        public override void SetValues(Shader shader, int index)
         {
-            base.SetValues(shader, name);
+            string name = "dirLights[" + index + "]";
+
+            base.SetColorValues(shader, name);
 
             shader.SetVec3(name + ".direction", Direction);
         }
@@ -81,9 +84,11 @@ namespace _3Dtest
             Quadratic = quadratic;
         }
 
-        public override void SetValues(Shader shader, string name)
+        public override void SetValues(Shader shader, int index)
         {
-            base.SetValues(shader, name);
+            string name = "pointLights[" + index + "]";
+
+            base.SetColorValues(shader, name);
 
             shader.SetVec3(name + ".position", Position);
             shader.SetFloat(name + ".constant", Constant);
@@ -127,9 +132,11 @@ namespace _3Dtest
             Quadratic = quadratic;
         }
 
-        public override void SetValues(Shader shader, string name)
+        public override void SetValues(Shader shader, int index)
         {
-            base.SetValues(shader, name);
+            string name = "spotLights[" + index + "]";
+
+            base.SetColorValues(shader, name);
 
             shader.SetVec3(name + ".position", Position);
             shader.SetVec3(name + ".direction", Direction);

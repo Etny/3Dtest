@@ -17,32 +17,6 @@ namespace _3Dtest
 
         private string directory;
 
-        public Model(GL gl, float[] v)
-        {
-            this.gl = gl;
-
-            List<Vertex> vs = new List<Vertex>();
-
-            for(int i = 0; i < v.Length; i += 8)
-            {
-                Vertex vr = new Vertex();
-                vr.Position = new Vector3(v[i], v[i + 1], v[i + 2]);
-                vr.Normal = new Vector3(v[i + 3], v[i + 4], v[i + 5]);
-                vr.TexCoords = new Vector2(v[i + 6], v[i + 7]);
-                vs.Add(vr);
-            }
-
-            List<uint> eb = new List<uint>();
-
-            for(int i = 0; i < vs.Count-2; i++)
-            {
-                eb.Add((uint)i);
-            }
-
-            meshes = new List<Mesh>();
-            meshes.Add(new Mesh(gl, vs.ToArray(), eb.ToArray(), new Texture[0]));
-        }
-
         public Model(GL gl, string filePath)
         {
             this.gl = gl;
@@ -99,10 +73,16 @@ namespace _3Dtest
                 ai.Vector3D mvn = mesh.Normals[i];
                 v.Normal = new Vector3(mvn.X, mvn.Y, mvn.Z);
 
+                ai.Vector3D mvt = mesh.Tangents[i];
+                v.Tangent = new Vector3(mvt.X, mvt.Y, mvt.Z);
+
+                ai.Vector3D mvb = mesh.BiTangents[i];
+                v.Bitangent = new Vector3(mvb.X, mvb.Y, mvb.Z);
+
                 if (mesh.TextureCoordinateChannelCount > 0)
                 {
-                    ai.Vector3D mvt = mesh.TextureCoordinateChannels[0][i];
-                    v.TexCoords = new Vector2(mvt.X, mvt.Y);
+                    ai.Vector3D mvc = mesh.TextureCoordinateChannels[0][i];
+                    v.TexCoords = new Vector2(mvc.X, mvc.Y);
                 }
                 else
                     v.TexCoords = new Vector2(0, 0);
@@ -125,6 +105,9 @@ namespace _3Dtest
 
                 Texture[] specular = loadMaterialTextures(material, ai.TextureType.Specular, TextureType.Specular);
                 tempTextures.AddRange(specular);
+
+                Texture[] normal = loadMaterialTextures(material, ai.TextureType.Height, TextureType.Normal);
+                tempTextures.AddRange(normal);
 
                 textures = tempTextures.ToArray();
             }

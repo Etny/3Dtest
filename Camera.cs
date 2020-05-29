@@ -29,6 +29,12 @@ namespace _3Dtest
             float z = (float)(Math.Sin(Util.ToRadians(Yaw)) * Math.Cos(Util.ToRadians(Pitch)));
             return Vector3.Normalize(new Vector3(x, y, z));
         }
+
+        public void SetDirection(Vector3 dir)
+        {
+            Yaw = Util.ToDegrees((float)Math.Atan2(dir.Y, dir.X));
+            Pitch = Util.ToDegrees((float)-Math.Asin(dir.X));
+        }
         
 
     }
